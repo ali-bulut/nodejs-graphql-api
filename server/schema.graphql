@@ -1,6 +1,7 @@
 type Query {
     # that means it'll be array of Job. So there may be multiple jobs whose type is Job.
     jobs: [Job]
+    job(id: ID!): Job
 }
 
 type Company {
