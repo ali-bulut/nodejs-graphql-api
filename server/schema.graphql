@@ -5,6 +5,14 @@ type Query {
     company(id: ID!): Company
 }
 
+type Mutation {
+    # all mutations must return a result just like queries. In this case, createJob mutation will return newly created jobId.
+    # Updated: now it will return Job type instead of ID.
+    
+    # createJob(companyId: ID, title: String, description: String): Job
+    createJob(input: CreateJobInput): Job
+}
+
 type Company {
     id: ID!
     name: String
@@ -18,5 +26,11 @@ type Job {
     title: String
     # we can use custom type in another custom type.
     company: Company
+    description: String
+}
+
+input CreateJobInput {
+    companyId: ID
+    title: String
     description: String
 }
