@@ -13,7 +13,10 @@ const Mutation = {
     // }
 
     // input is coming from graphQL input(CreateJobInput) that is assigned to createJob mutation as parameter.
-    createJob: (root, {input}) => {
+    createJob: (root, {input}, context) => {
+        if(!context.user){
+            throw new Error("Unauthorized!")
+        }
         const id = db.jobs.create(input);
         return db.jobs.get(id);
     }
