@@ -4,4 +4,9 @@ const Query = {
     jobs: () => db.jobs.list()
 }
 
-module.exports = { Query };
+// naming is important! In schema, company is inside of the Job. So here it should be same.
+const Job = {
+    company: (job) => db.companies.get(job.companyId)
+}
+
+module.exports = { Query, Job };
