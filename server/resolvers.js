@@ -7,7 +7,16 @@ const Query = {
 }
 
 const Mutation = {
-    createJob: (root, {companyId, title, description}) => db.jobs.create({companyId, title, description})
+    // createJob: (root, {companyId, title, description}) => {
+    //     const id = db.jobs.create({companyId, title, description});
+    //     return db.jobs.get(id);
+    // }
+
+    // input is coming from graphQL input(CreateJobInput) that is assigned to createJob mutation as parameter.
+    createJob: (root, {input}) => {
+        const id = db.jobs.create(input);
+        return db.jobs.get(id);
+    }
 }
 
 // naming is important! In schema, company is inside of the Job. So here it should be same.
