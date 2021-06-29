@@ -1,5 +1,18 @@
+const db = require('./db');
+
 const Query = {
-    greeting: () => 'Hello World!'
+    jobs: () => db.jobs.list(),
+    job: (root, args) => db.jobs.get(args.id),
+    company: (root, args) => db.companies.get(args.id)
 }
 
-module.exports = { Query };
+// naming is important! In schema, company is inside of the Job. So here it should be same.
+const Job = {
+    company: (job) => db.companies.get(job.companyId)
+}
+
+const Company = {
+    jobs: (company) => db.jobs.list().filter((job) => job.companyId === company.id)
+}
+
+module.exports = { Query, Job, Company };

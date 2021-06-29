@@ -1,3 +1,22 @@
 type Query {
-    greeting: String
+    # that means it'll be array of Job. So there may be multiple jobs whose type is Job.
+    jobs: [Job]
+    job(id: ID!): Job
+    company(id: ID!): Company
+}
+
+type Company {
+    id: ID!
+    name: String
+    description: String
+    jobs: [Job]
+}
+
+type Job {
+    # ! => means id must never be null.
+    id: ID!
+    title: String
+    # we can use custom type in another custom type.
+    company: Company
+    description: String
 }
