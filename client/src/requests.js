@@ -66,3 +66,38 @@ export const loadCompany = async (id) => {
     const data = await graphqlRequest(query, {id});
     return data.company;
 }
+
+export const createJob = async (input) => {
+    /* job: createJob(input: $input) => we don't need to use `job:` unless we want to get the result as job object. Only difference is seen in the following;
+    {
+        data: {
+            job: {
+                id: "134324",
+                title: "sdgsgd"
+            }
+        }
+    }
+
+    {
+        data: {
+            createJob: {
+                id: "1241341",
+                title: "ddsdfas"
+            }
+        }
+    }
+    */
+    const mutation = `mutation CreateJob($input: CreateJobInput) {
+        job: createJob(input: $input) {
+            id
+            title
+            company {
+                id
+                name
+            }
+        }
+    }`
+    // we are using {input} to send object as {input: {title: "dgsd", ...}}
+    const data = await graphqlRequest(mutation, {input});
+    return data.job;
+}
