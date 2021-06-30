@@ -1,4 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from 'apollo-boost';
+import { gql } from 'graphql-tag';
 import { getAccessToken, isLoggedIn } from "./auth";
 
 const endpointUrl = "http://localhost:9000/graphql";
@@ -34,7 +35,8 @@ const graphqlRequest = async (query, variables={}) => {
 }
 
 export const loadJobs = async () => {
-    const query = `{
+    // gql parsing the string into an object that represents the GraphQL query.
+    const query = gql`{
         jobs{
             id
             title
@@ -44,12 +46,13 @@ export const loadJobs = async () => {
             }
         }
     }`
-    const data = await graphqlRequest(query);
+    const { data } = await client.query({query});
+    // const data = await graphqlRequest(query);
     return data.jobs;
 }
 
 export const loadJob = async (id) => {
-    const query = `query JobQuery($id: ID!) {
+    const query = gql`query JobQuery($id: ID!) {
         job(id: $id) {
             id
             title
@@ -60,12 +63,13 @@ export const loadJob = async (id) => {
             description
         }
     }`
-    const data = await graphqlRequest(query, {id});
+    const { data } = await client.query({query, variables: { id }});
+    // const data = await graphqlRequest(query, {id});
     return data.job;
 }
 
 export const loadCompany = async (id) => {
-    const query = `query CompanyQuery($id: ID!) {
+    const query = gql`query CompanyQuery($id: ID!) {
         company(id: $id) {
             id
             name
@@ -76,7 +80,8 @@ export const loadCompany = async (id) => {
             }
         }
     }`
-    const data = await graphqlRequest(query, {id});
+    const { data } = await client.query({query, variables: { id }});
+    // const data = await graphqlRequest(query, {id});
     return data.company;
 }
 
@@ -100,7 +105,7 @@ export const createJob = async (input) => {
         }
     }
     */
-    const mutation = `mutation CreateJob($input: CreateJobInput) {
+    const mutation = gql`mutation CreateJob($input: CreateJobInput) {
         job: createJob(input: $input) {
             id
             title
@@ -110,7 +115,8 @@ export const createJob = async (input) => {
             }
         }
     }`
+    const { data } = await client.mutate({mutation, variables: { input }});
     // we are using {input} to send object as {input: {title: "dgsd", ...}}
-    const data = await graphqlRequest(mutation, {input});
+    // const data = await graphqlRequest(mutation, {input});
     return data.job;
 }
