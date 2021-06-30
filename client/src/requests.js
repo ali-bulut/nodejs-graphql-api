@@ -69,23 +69,6 @@ export const loadJobs = async () => {
     return data.jobs;
 }
 
-export const loadJob = async (id) => {
-    const query = gql`query JobQuery($id: ID!) {
-        job(id: $id) {
-            id
-            title
-            company {
-                id
-                name
-            }
-            description
-        }
-    }`
-    const { data } = await client.query({query, variables: { id }});
-    // const data = await graphqlRequest(query, {id});
-    return data.job;
-}
-
 export const loadCompany = async (id) => {
     const query = gql`query CompanyQuery($id: ID!) {
         company(id: $id) {
@@ -101,6 +84,24 @@ export const loadCompany = async (id) => {
     const { data } = await client.query({query, variables: { id }});
     // const data = await graphqlRequest(query, {id});
     return data.company;
+}
+
+const jobQuery = gql`query JobQuery($id: ID!) {
+    job(id: $id) {
+        id
+        title
+        company {
+            id
+            name
+        }
+        description
+    }
+}`
+
+export const loadJob = async (id) => {
+    const { data } = await client.query({query: jobQuery, variables: { id }});
+    // const data = await graphqlRequest(query, {id});
+    return data.job;
 }
 
 export const createJob = async (input) => {
@@ -131,9 +132,29 @@ export const createJob = async (input) => {
                 id
                 name
             }
+            description
         }
     }`
-    const { data } = await client.mutate({mutation, variables: { input }});
+    const { data } = await client.mutate({
+        mutation, 
+        variables: { input }, 
+        // update is a function that will be called after the mutation has been executed.
+        update: (cache, mutationResult) => {
+            const data = mutationResult.data;
+            // whenever we run a query with apollo-client after executing a query, apollo-client calls this writeQuery function by passing the query
+            // and the data it received as response to save response data to the cache. But in this case we want to override it.
+            
+            // recap: this function does that tells apollo client whenever you run this mutation, take the data returned in the response 
+            // and save it to the cache as if it was the result of running the jobQuery for that specific job id.
+            // this way when we actually run jobQuery with that job id, it'll find the data in the cache and avoid
+            // making a new call to the server.
+            cache.writeQuery({
+                query: jobQuery, 
+                variables: {id: data.job.id},
+                data
+            })
+        }
+    });
     // we are using {input} to send object as {input: {title: "dgsd", ...}}
     // const data = await graphqlRequest(mutation, {input});
     return data.job;
