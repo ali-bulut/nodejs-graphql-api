@@ -61,7 +61,10 @@ export const loadJobs = async () => {
             }
         }
     }`
-    const { data } = await client.query({query});
+    // we set fetchPolicy as no-cache because we always want to fetch latest jobs not the cached ones. 
+    // (Default fetchPolicy is cache-first => That means if there is already data in cache it won't send a new request
+    // to the server and it'll use the data that is cached)
+    const { data } = await client.query({query, fetchPolicy: 'no-cache'});
     // const data = await graphqlRequest(query);
     return data.jobs;
 }
