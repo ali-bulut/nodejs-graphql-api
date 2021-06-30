@@ -49,9 +49,21 @@ const graphqlRequest = async (query, variables={}) => {
     return responseBody.data;
 }
 
-export const loadJobs = async () => {
-    // gql parsing the string into an object that represents the GraphQL query.
-    const query = gql`{
+const jobDetailFragment = gql`
+    fragment JobDetail on Job {
+        id
+        title
+        company {
+            id
+            name
+        }
+        description
+    }
+`
+
+// gql parsing the string into an object that represents the GraphQL query.
+const jobsQuery = gql`
+    query JobsQuery{
         jobs{
             id
             title
@@ -60,17 +72,20 @@ export const loadJobs = async () => {
                 name
             }
         }
-    }`
-    // we set fetchPolicy as no-cache because we always want to fetch latest jobs not the cached ones. 
-    // (Default fetchPolicy is cache-first => That means if there is already data in cache it won't send a new request
-    // to the server and it'll use the data that is cached)
-    const { data } = await client.query({query, fetchPolicy: 'no-cache'});
-    // const data = await graphqlRequest(query);
-    return data.jobs;
-}
+    }
+`
 
-export const loadCompany = async (id) => {
-    const query = gql`query CompanyQuery($id: ID!) {
+const jobQuery = gql`
+    query JobQuery($id: ID!) {
+        job(id: $id) {
+            ...JobDetail
+        }
+    }
+    ${jobDetailFragment}
+`
+
+const companyQuery = gql`
+    query CompanyQuery($id: ID!) {
         company(id: $id) {
             id
             name
@@ -80,23 +95,32 @@ export const loadCompany = async (id) => {
                 title
             }
         }
-    }`
-    const { data } = await client.query({query, variables: { id }});
+    }
+`
+
+const createJobMutation = gql`
+    mutation CreateJob($input: CreateJobInput) {
+        job: createJob(input: $input) {
+            ...JobDetail # fragment name here
+        }
+    }
+    ${jobDetailFragment} # js variable name that represents fragment here.
+`
+
+export const loadJobs = async () => {
+    // we set fetchPolicy as no-cache because we always want to fetch latest jobs not the cached ones. 
+    // (Default fetchPolicy is cache-first => That means if there is already data in cache it won't send a new request
+    // to the server and it'll use the data that is cached)
+    const { data } = await client.query({query: jobsQuery, fetchPolicy: 'no-cache'});
+    // const data = await graphqlRequest(query);
+    return data.jobs;
+}
+
+export const loadCompany = async (id) => {
+    const { data } = await client.query({query: companyQuery, variables: { id }});
     // const data = await graphqlRequest(query, {id});
     return data.company;
 }
-
-const jobQuery = gql`query JobQuery($id: ID!) {
-    job(id: $id) {
-        id
-        title
-        company {
-            id
-            name
-        }
-        description
-    }
-}`
 
 export const loadJob = async (id) => {
     const { data } = await client.query({query: jobQuery, variables: { id }});
@@ -124,19 +148,8 @@ export const createJob = async (input) => {
         }
     }
     */
-    const mutation = gql`mutation CreateJob($input: CreateJobInput) {
-        job: createJob(input: $input) {
-            id
-            title
-            company {
-                id
-                name
-            }
-            description
-        }
-    }`
     const { data } = await client.mutate({
-        mutation, 
+        mutation: createJobMutation, 
         variables: { input }, 
         // update is a function that will be called after the mutation has been executed.
         update: (cache, mutationResult) => {
